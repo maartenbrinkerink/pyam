@@ -21,18 +21,19 @@ def test_downscale_region_with_proxy(simple_df, variable):
     assert_iamframe_equal(inplace, simple_df)
 
 
-@pytest.mark.parametrize("variable", (
-    ('Primary Energy'),
-    (['Primary Energy', 'Primary Energy|Coal']),
+@pytest.mark.parametrize("variable, index", (
+    ('Primary Energy', ['region']),
+    (['Primary Energy', 'Primary Energy|Coal'], ['region']),
+    (['Primary Energy', 'Primary Energy|Coal'], ['model', 'region']),
 ))
-def test_downscale_region_with_weight(simple_df, variable):
+def test_downscale_region_with_weight(simple_df, variable, index):
     simple_df.set_meta([1], name='test')
     regions = ['reg_a', 'reg_b']
 
     # create weighting dataframe
     weight_df = (
-        simple_df.filter(variable='Population').data
-        .pivot_table(index='region', columns=simple_df.time_col,
+        simple_df.filter(variable='Population', region=regions).data
+        .pivot_table(index=index, columns=simple_df.time_col,
                      values='value')
     )
 

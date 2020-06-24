@@ -1098,13 +1098,12 @@ class IamDataFrame(object):
         ----------
         variable : str or list of str
             variable(s) to be downscaled
-        proxy : str
-            variable within the IamDataFrame to be used as proxy for the 
-            downscaling, optional
-        weight : dataframe
-            weighting dataframe outside the IamDataFrame that can be fed 
-            into the downscale function. Index = subregions, columns = time_col,
-            optional
+        proxy : str, optional
+            variable (within the :class:`IamDataFrame`) to be used as proxy
+            for regional downscaling
+        weight : class:`pandas.DataFrame`, optional
+            dataframe with time dimension as columns (year or
+            :class:`datetime.datetime`) and regions[, model, scenario] as index
         region : str, default 'World'
             region from which data will be downscaled
         subregions : list of str
@@ -1125,8 +1124,10 @@ class IamDataFrame(object):
             _proxy = _df.set_index(self._get_cols(['region', self.time_col])).value
             _total = _df.groupby(self._get_cols([self.time_col])).value.sum()
         elif weight is not None:
-            _proxy = weight.set_index(self._get_cols(['region', self.time_col])).value
-            _total = weight.groupby(self._get_cols([self.time_col])).value.sum()
+            # only use data related to subregions
+            rows = weight.index.isin(subregions, level='region')
+            _proxy = weight[rows].stack()
+            _total = _proxy.groupby(self.time_col).sum()
         else:
             raise ValueError('Either `proxy` or `weight` arguments is required')
                                                            
